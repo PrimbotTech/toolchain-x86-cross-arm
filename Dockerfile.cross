@@ -1,0 +1,41 @@
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# 安装交叉编译工具链和构建工具
+RUN apt-get update && apt-get install -y \
+    gcc-aarch64-linux-gnu \
+    g++-aarch64-linux-gnu \
+    net-tools \
+    openssh-client \
+    openssh-server \
+    vim \
+    iputils-ping \
+    file \
+    cmake \
+    python3-pip \
+    git \
+    && rm -rf /var/lib/apt/lists/* \
+    && pip3 install colcon-common-extensions
+
+RUN pip3 install nanobind empy==3.3.4 lark -i https://pypi.tuna.tsinghua.edu.cn/simple
+
+# 将 arm_sysroot.tar 复制到镜像并解压到 /opt/aarch64-sysroot
+COPY arm_sysroot.tar /tmp/
+RUN mkdir -p /opt/aarch64-sysroot \
+    && tar -xf /tmp/arm_sysroot.tar -C /opt/aarch64-sysroot \
+    && rm /tmp/arm_sysroot.tar
+
+RUN mkdir -p /usr/lib/aarch64-linux-gnu \
+&& ln -sf /opt/aarch64-sysroot/usr/lib/aarch64-linux-gnu/libpython3.10.so /usr/lib/aarch64-linux-gnu/libpython3.10.so
+
+# 设置环境变量或编写默认工具链文件（可选）
+COPY aarch64_toolchain.cmake /opt/
+COPY ./cmake_modules /opt/cmake_modules
+ENV CMAKE_TOOLCHAIN_FILE=/opt/aarch64_toolchain.cmake
+ENV PYTHONPATH="/opt/aarch64-sysroot/opt/ros/humble/lib/python3.10/site-packages:/opt/aarch64-sysroot/opt/ros/humble/local/lib/python3.10/dist-packages"
+ENV AMENT_PREFIX_PATH=/opt/aarch64-sysroot/opt/ros/humble
+ENV ROS_DISTRO=humble
+
+WORKDIR /workspace
+CMD ["/bin/bash"]
