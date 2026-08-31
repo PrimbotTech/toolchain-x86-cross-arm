@@ -30,10 +30,11 @@ RUN mkdir -p /usr/lib/aarch64-linux-gnu \
 && ln -sf /opt/aarch64-sysroot/usr/lib/aarch64-linux-gnu/libpython3.10.so /usr/lib/aarch64-linux-gnu/libpython3.10.so
 
 # 设置环境变量或编写默认工具链文件（可选）
-COPY aarch64_toolchain.cmake /opt/
-COPY ./cmake_modules /opt/cmake_modules
+COPY common/aarch64_toolchain.cmake /opt/
+COPY common/cmake_modules /opt/cmake_modules
 ENV CMAKE_TOOLCHAIN_FILE=/opt/aarch64_toolchain.cmake
 ENV PYTHONPATH="/opt/aarch64-sysroot/opt/ros/humble/lib/python3.10/site-packages:/opt/aarch64-sysroot/opt/ros/humble/local/lib/python3.10/dist-packages"
+# 交叉编译容器内使用 sysroot 路径，编译完成后部署到目标板前需要 patch
 ENV AMENT_PREFIX_PATH=/opt/aarch64-sysroot/opt/ros/humble
 ENV ROS_DISTRO=humble
 

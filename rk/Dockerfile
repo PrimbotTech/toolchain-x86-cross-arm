@@ -1,0 +1,40 @@
+FROM ros:humble-ros-base
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# --- 更换为国内镜像源 (以清华源为例) ---
+# 注意：如果你使用的是 ARM 架构，请将 sources.list 中的 "ubuntu/" 替换为 "ubuntu-ports/"
+RUN sed -i 's/archive.ubuntu.com/mirrors.tuna.tsinghua.edu.cn/g' /etc/apt/sources.list && \
+    sed -i 's/ports.ubuntu.com/mirrors.tuna.tsinghua.edu.cn/g' /etc/apt/sources.list
+
+
+# 安装项目所需的额外开发库（仅供 ARM 编译使用）
+# 基础镜像已包含 ROS 2 的头文件和库，所以无需再安装 rclcpp 等
+# --- 安装依赖包 ---
+RUN apt-get update && apt-get install -y \
+    pybind11-dev \
+    python3-pip \
+    libopencv-dev \
+    libyaml-cpp-dev \
+    libeigen3-dev \
+    libavcodec-dev \
+    libavformat-dev \
+    libswscale-dev \
+    libjpeg-dev \
+    libpng-dev \
+    libtiff-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# 安装 Python 依赖（empy 降级 + lark）
+RUN pip3 install empy==3.3.4 lark -i https://pypi.tuna.tsinghua.edu.cn/simple
+
+# 4. 安装 ONNX Runtime（ARM64 预编译包）
+# 下载并解压到 /usr/local/onnxruntime
+
+ADD common/onnxruntime-linux-aarch64-1.18.0.tgz /usr/local/onnxruntime/
+RUN mv /usr/local/onnxruntime/onnxruntime-linux-aarch64-1.18.0/* /usr/local/onnxruntime/ && \
+    rmdir /usr/local/onnxruntime/onnxruntime-linux-aarch64-1.18.0
+
+# 配置动态链接库路径并更新缓存
+RUN echo '/usr/local/onnxruntime/lib' > /etc/ld.so.conf.d/onnxruntime.conf && \
+    ldconfig
