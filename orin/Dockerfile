@@ -2,8 +2,9 @@ FROM nvcr.io/nvidia/l4t-base:r36.2.0
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# 0. 更换为国内镜像源（加速 apt 下载）
-RUN sed -i 's/ports.ubuntu.com/mirrors.tuna.tsinghua.edu.cn/g' /etc/apt/sources.list
+RUN sed -i 's/archive.ubuntu.com/mirrors.tuna.tsinghua.edu.cn/g' /etc/apt/sources.list && \
+    sed -i 's/ports.ubuntu.com/mirrors.tuna.tsinghua.edu.cn/g' /etc/apt/sources.list
+
 
 # 1. 添加 NVIDIA 官方源（确保 CUDA/cuDNN/TensorRT 可用）
 RUN apt-get update && apt-get install -y wget \
