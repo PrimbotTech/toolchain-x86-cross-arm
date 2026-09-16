@@ -37,8 +37,10 @@ COPY common/aarch64_toolchain.cmake /opt/
 COPY common/cmake_modules /opt/cmake_modules
 ENV CMAKE_TOOLCHAIN_FILE=/opt/aarch64_toolchain.cmake
 ENV PYTHONPATH="/opt/aarch64-sysroot/opt/ros/humble/lib/python3.10/site-packages:/opt/aarch64-sysroot/opt/ros/humble/local/lib/python3.10/dist-packages"
-# 交叉编译容器内使用 sysroot 路径，编译完成后部署到目标板前需要 patch
-ENV AMENT_PREFIX_PATH=/opt/aarch64-sysroot/opt/ros/humble
+# 将 sysroot 中的 ROS 2 软链到 /opt/ros/humble，
+# 使编译时 AMENT_PREFIX_PATH 与目标板一致，避免部署时修改 setup.bash
+RUN mkdir -p /opt/ros && ln -sf /opt/aarch64-sysroot/opt/ros/humble /opt/ros/humble
+ENV AMENT_PREFIX_PATH=/opt/ros/humble
 ENV ROS_DISTRO=humble
 
 WORKDIR /workspace
